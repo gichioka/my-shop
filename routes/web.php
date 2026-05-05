@@ -1,9 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Mail;
-use App\Models\Order;
-use App\Mail\OrderConfirmation;
 
 Route::view('/', 'home');
 Route::view('/cart', 'cart');
@@ -37,35 +34,6 @@ Route::get('/admin/users', function () {
     return view('admin.users');
 });
 
-// 決済完了
-Route::get('/payment/success', function () {
-    $cart = session('cart', []);
-
-    if (!empty($cart)) {
-        $total = collect($cart)->sum(fn($i) => $i['price'] * $i['quantity']);
-
-        $order = Order::create([
-            'user_id' => auth()->id(),
-            'total'   => $total,
-        ]);
-
-        foreach ($cart as $item) {
-            $order->items()->create([
-                'name'     => $item['name'],
-                'price'    => $item['price'],
-                'quantity' => $item['quantity'],
-            ]);
-
-            \App\Models\Product::find($item['id'])->decrement('stock', $item['quantity']);
-        }
-
-        session()->forget('cart');
-
-        // メール送信
-        Mail::to(auth()->user()->email)->send(new OrderConfirmation($order));
-    }
-
-    return redirect('/orders');
-})->middleware('auth');
+Route::view('/payment/success', 'payment-success')->middleware('auth');
 
 require __DIR__.'/auth.php';
