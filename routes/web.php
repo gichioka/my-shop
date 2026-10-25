@@ -6,6 +6,7 @@ Route::view('/', 'home');
 Route::view('/cart', 'cart');
 Route::view('/checkout', 'checkout')->middleware('auth');
 Route::view('/dashboard', 'dashboard')->name('dashboard');
+Route::view('/payment/success', 'payment-success')->middleware('auth');
 
 // プロフィール
 Route::get('/profile', function () {
@@ -33,7 +34,5 @@ Route::get('/admin/users', function () {
     }
     return view('admin.users');
 });
-
-Route::view('/payment/success', 'payment-success')->middleware('auth');
 
 require __DIR__.'/auth.php';

@@ -13,6 +13,12 @@ class Checkout extends Component
     public function mount()
     {
         $this->cart = session('cart', []);
+
+        // 住所が未登録の場合はプロフィールページへ
+        if (empty(auth()->user()->address)) {
+            $this->redirect('/profile');
+            return;
+        }
     }
 
     public function getTotalProperty()
@@ -28,10 +34,8 @@ class Checkout extends Component
             return;
         }
 
-        // Stripe設定
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        // Stripeの明細を作成
         $lineItems = [];
         foreach ($this->cart as $item) {
             $lineItems[] = [
@@ -46,16 +50,17 @@ class Checkout extends Component
             ];
         }
 
-        // StripeのCheckoutセッション作成
         $stripeSession = Session::create([
             'payment_method_types' => ['card'],
             'line_items'           => $lineItems,
             'mode'                 => 'payment',
             'success_url'          => url('/payment/success'),
             'cancel_url'           => url('/checkout'),
+            'metadata'             => [
+                'user_id' => auth()->id(),
+            ],
         ]);
 
-        // Stripeの決済ページへリダイレクト
         $this->redirect($stripeSession->url);
     }
 
